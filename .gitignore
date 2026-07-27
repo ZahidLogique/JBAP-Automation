@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Auth state (session cookies)
+.auth/
+
+# Playwright output
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Allure
+/allure-results/
+/allure-report/
+
+# Screenshots (auto-generated)
+/screenshots/
+
+# Test result JSON
+test-results.json
+
+# Playwright CLI temp files
+.playwright-cli/
+
+# Claude Code (ignore semua kecuali skills)
+.claude/*
+!.claude/skills/
