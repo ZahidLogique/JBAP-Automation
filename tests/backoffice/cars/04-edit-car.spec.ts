@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { CarFormPage } from "../../../pages/backoffice/CarFormPage";
+import { CarDetailPage } from "../../../pages/backoffice/CarDetailPage";
 import { loadState } from "../../../fixtures/test-state";
 import { EDIT_DATA } from "../../../fixtures/car-data";
 
@@ -54,13 +55,16 @@ test.describe("Edit Car", () => {
     await page.waitForTimeout(1000);
     await page.waitForLoadState("networkidle");
 
-    const currentUrl = page.url();
-    const successIndicator = page.locator(".alert-success, .toast-success, .swal2-popup");
-    const isRedirected = currentUrl.includes("/car/list") || currentUrl.includes("/car/detail");
-    const isStillOnEdit = currentUrl.includes("/car/edit-car");
+    const detail = new CarDetailPage(page);
+    await detail.goto(vid);
 
-    const hasSuccess = (await successIndicator.count()) > 0 || isRedirected || isStillOnEdit;
-    expect(hasSuccess).toBeTruthy();
+    const mileage = await detail.getFieldValue("Mileage (Km)");
+    const color = await detail.getFieldValue("Color");
+    const startPrice = await detail.getFieldValue("Start Price");
+
+    expect(mileage.replace(/,/g, "")).toBe(EDIT_DATA.mileage);
+    expect(color).toBe(EDIT_DATA.color);
+    expect(startPrice.replace(/,/g, "")).toBe(EDIT_DATA.startPrice);
   });
 
   test("CE-003: required field validation on edit", async ({ page }) => {

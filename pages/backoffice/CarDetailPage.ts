@@ -5,8 +5,8 @@ export class CarDetailPage {
   readonly backButton: Locator;
 
   constructor(private page: Page) {
-    this.editCarButton = page.getByRole("link", { name: "Edit Car" });
-    this.backButton = page.getByRole("link", { name: "Back" });
+    this.editCarButton = page.getByRole("button", { name: "Edit Car" });
+    this.backButton = page.getByRole("button", { name: "Back" });
   }
 
   async goto(vid: number) {
@@ -19,13 +19,19 @@ export class CarDetailPage {
     return ((await heading.textContent()) ?? "").trim();
   }
 
+  private carInfoTable(): Locator {
+    return this.page.locator("table", { hasText: "Car Information" }).first();
+  }
+
   async getFieldValue(label: string): Promise<string> {
-    const row = this.page.locator(`text=${label}`).locator("..").locator("td, dd, span").last();
-    return ((await row.textContent()) ?? "").trim();
+    const labelLoc = this.carInfoTable().locator(`text=${label}`).first();
+    const container = labelLoc.locator("..");
+    const fullText = ((await container.textContent()) ?? "").trim();
+    return fullText.slice(label.length).replace(/^[:\s]+/, "").trim();
   }
 
   async isFieldVisible(label: string): Promise<boolean> {
-    return await this.page.locator(`text=${label}`).isVisible();
+    return await this.carInfoTable().locator(`text=${label}`).isVisible();
   }
 
   async clickEditCar() {

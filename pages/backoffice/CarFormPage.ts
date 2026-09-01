@@ -1,4 +1,5 @@
 import { Page, Locator } from "@playwright/test";
+import { fillStartPrice } from "../../utils/dropdown";
 
 export interface CarFormData {
   vehicleControlNumber?: string;
@@ -134,7 +135,7 @@ export class CarFormPage {
     if (data.vehicleOwnershipStatus) await this.fillTextField("vehicle_ownership_status", data.vehicleOwnershipStatus);
     if (data.acquiredFrom) await this.fillTextField("acquired_from", data.acquiredFrom);
     if (data.encumberedTo) await this.fillTextField("encumbered_to", data.encumberedTo);
-    if (data.startPrice) await this.fillTextField("start_price", data.startPrice);
+    if (data.startPrice) await fillStartPrice(this.page, data.startPrice);
     if (data.minimumPrice) await this.fillTextField("minimum_price", data.minimumPrice);
     if (data.estimatedArrivalDate) await this.fillTextField("estimated_arrival_date", data.estimatedArrivalDate);
   }
