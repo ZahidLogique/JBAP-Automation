@@ -4,5 +4,9 @@
   "viewport": {
     "width": 1920,
     "height": 1080
+  },
+  "httpCredentials": {
+    "username": "Jb@_Ph",
+    "password": "JbaPhAuction"
   }
 }

@@ -25,6 +25,34 @@ export default defineConfig({
   },
   projects: [
     {
+      name: "setup-backoffice",
+      testDir: "./tests/setup",
+      testMatch: "backoffice.setup.ts",
+      use: {
+        ...devices["Desktop Chrome"],
+        httpCredentials: {
+          username: process.env.BASIC_AUTH_USER!,
+          password: process.env.BASIC_AUTH_PASS!,
+        },
+      },
+    },
+    {
+      name: "backoffice",
+      testDir: "./tests/backoffice",
+      fullyParallel: false,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: process.env.BACKOFFICE_URL,
+        storageState: ".auth/backoffice.json",
+        httpCredentials: {
+          username: process.env.BASIC_AUTH_USER!,
+          password: process.env.BASIC_AUTH_PASS!,
+        },
+      },
+      dependencies: ["setup-backoffice"],
+    },
+    {
       name: "web",
       testDir: "./tests/web",
       use: {
