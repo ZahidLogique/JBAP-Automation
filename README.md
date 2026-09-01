@@ -18,9 +18,17 @@ JBAP/
 ├── .playwright/
 │   └── cli.config.json       # Playwright CLI config (headed, httpCredentials)
 ├── playwright.config.ts      # Playwright Test config (projects, reporters)
-├── global-setup.ts           # Clean screenshots & allure-results before run
+├── global-setup.ts           # Clean screenshots, allure-results & test state before run
 ├── tsconfig.json
 ├── package.json
+│
+├── utils/                    # Shared helper functions
+│   ├── select2.ts            # Select2 searchable dropdown handler
+│   └── dropdown.ts           # Dependent dropdowns (Make→Model→Variant), date pickers, start price
+│
+├── fixtures/                 # Test data & shared state
+│   ├── car-data.ts           # Random car data generator, edit data constants
+│   └── test-state.ts         # Cross-file shared state (VCN/VID) via JSON file
 │
 ├── pages/backoffice/         # Page Object Model
 │   ├── LoginPage.ts          # CDMS login (username, password, captcha skip)
@@ -31,13 +39,12 @@ JBAP/
 ├── tests/
 │   ├── setup/
 │   │   └── backoffice.setup.ts   # Auth setup → saves .auth/backoffice.json
-│   └── backoffice/cars/
-│       ├── regression.spec.ts    # Main regression file (22 tests, sequential)
-│       ├── add-car.spec.ts       # Individual add car tests (legacy)
-│       ├── car-list.spec.ts      # Individual car list tests (legacy)
-│       ├── car-detail.spec.ts    # Individual car detail tests (legacy)
-│       ├── edit-car.spec.ts      # Individual edit car tests (legacy)
-│       └── change-history.spec.ts # Individual change history tests (legacy)
+│   └── backoffice/cars/          # Spec files run sequentially (01→05)
+│       ├── 01-car-list.spec.ts       # CL-001, CL-002, CL-007
+│       ├── 02-add-car.spec.ts        # CA-001 to CA-006 (creates car, verifies in list)
+│       ├── 03-car-detail.spec.ts     # CD-001 to CD-004 (uses created car)
+│       ├── 04-edit-car.spec.ts       # CE-001 to CE-006 (uses created car)
+│       └── 05-change-history.spec.ts # CH-001, CH-002, CH-004
 │
 ├── allure-results/           # Generated test results (gitignored)
 ├── test-results/             # Playwright output (gitignored)
@@ -81,22 +88,22 @@ cp .env.example .env
 ## Running Tests
 
 ```bash
-# Run full regression (recommended)
-npx playwright test tests/backoffice/cars/regression.spec.ts --project=backoffice
+# Run full regression (all car specs, sequential)
+npx playwright test --project=backoffice
+
+# Run specific module only
+npx playwright test tests/backoffice/cars/02-add-car.spec.ts --project=backoffice
 
 # Run specific test by name
 npx playwright test --project=backoffice -g "CA-004"
-
-# Run all backoffice tests (includes legacy individual files)
-npx playwright test --project=backoffice
 
 # View Allure report
 npm run report
 ```
 
-## Regression Test Cases (regression.spec.ts)
+## Regression Test Cases
 
-All tests run **sequentially** in one file. Add Car creates a car with random data, subsequent tests use that car.
+Tests run **sequentially** across 5 spec files (numbered 01-05). Add Car (02) creates a car with random data and saves VCN/VID to `.test-state.json`. Detail (03) and Edit (04) read that state to test the created car.
 
 | # | ID | Test Case | Section |
 |---|------|-----------|---------|
@@ -124,38 +131,25 @@ All tests run **sequentially** in one file. Add Car creates a car with random da
 
 ## Key Technical Notes
 
-### Select2 Searchable Dropdowns
-Fields like Location, Seller, Storage/Pool, Year Model use Select2. Click on `#select2-{fieldId}-container`, type in search field, select from results. Helper function `selectSelect2()` handles this.
+### Shared Helpers (`utils/`)
+- **`select2.ts`** — `selectSelect2(page, fieldId, searchText)` handles Select2 searchable dropdowns (Location, Seller, Storage/Pool, Year Model)
+- **`dropdown.ts`** — `selectMakeModelVariant(page)` handles Make→Model→Variant AJAX chain with jQuery trigger; `setDateField()` and `fillStartPrice()` for special fields
+
+### Test Data (`fixtures/`)
+- **`car-data.ts`** — `generateCarData(rnd)` creates random car data per run using `Date.now()` suffix
+- **`test-state.ts`** — `saveState()`/`loadState()` shares VCN/VID between spec files via `.test-state.json`
 
 ### AJAX Dependent Dropdowns (Make > Model > Variant)
-Make selection loads Model options via AJAX. Must trigger jQuery change event manually:
+Make selection loads Model options via AJAX. Must trigger jQuery change event manually — Playwright's `selectOption` alone does NOT trigger jQuery events:
 ```typescript
-await page.locator("#make").selectOption({ label: "TOYOTA" });
-await page.evaluate(() => {
-  if ((window as any).jQuery) (window as any).jQuery("#make").trigger("change");
-});
-await page.waitForTimeout(3000); // wait for AJAX
-```
-Same pattern for Model > Variant.
-
-### Date Picker Fields
-Date fields (`date_last_registration`, `estimated_arrival_date`) use a date picker plugin. Set via `page.evaluate()` with change event dispatch:
-```typescript
-await page.evaluate(() => {
-  const el = document.querySelector("#date_last_registration") as HTMLInputElement;
-  el.value = "01/01/2025";
-  el.dispatchEvent(new Event("change", { bubbles: true }));
-});
+import { selectMakeModelVariant } from "../../../utils/dropdown";
+await selectMakeModelVariant(page, "TOYOTA");
 ```
 
-### Start Price Field
-Has custom JS validation. Use `pressSequentially()` instead of `fill()`:
-```typescript
-await field.pressSequentially("100000", { delay: 50 });
-```
-
-### Random Test Data
-Car data uses `Date.now()` suffix for uniqueness. Each test run creates a car with different plate number, chassis, engine number, etc.
+### Special Fields
+- **Date pickers** — use `setDateField(page, "date_last_registration", "01/01/2025")` (sets via `page.evaluate` with change event)
+- **Start Price** — use `fillStartPrice(page, "100000")` (uses `pressSequentially` due to custom JS validation)
+- **Random data** — `generateCarData()` creates unique plate, chassis, engine numbers per run
 
 ## Playwright CLI (Interactive Exploration)
 

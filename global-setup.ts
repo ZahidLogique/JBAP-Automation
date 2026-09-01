@@ -13,4 +13,7 @@ export default async function globalSetup() {
     fs.rmSync(allureResultsDir, { recursive: true, force: true });
   }
   fs.mkdirSync(allureResultsDir, { recursive: true });
+
+  const stateFile = path.join(process.cwd(), ".test-state.json");
+  if (fs.existsSync(stateFile)) fs.unlinkSync(stateFile);
 }

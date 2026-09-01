@@ -23,6 +23,9 @@ node_modules/
 # Test result JSON
 test-results.json
 
+# Test shared state (generated per run)
+.test-state.json
+
 # Playwright CLI temp files
 .playwright-cli/
 

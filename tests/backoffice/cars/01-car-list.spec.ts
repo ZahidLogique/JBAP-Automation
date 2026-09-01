@@ -1,15 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { CarListPage } from "../../../pages/backoffice/CarListPage";
 
-test.describe("Car list", () => {
-  let carList: CarListPage;
-
-  test.beforeEach(async ({ page }) => {
-    carList = new CarListPage(page);
-    await carList.goto();
-  });
+test.describe("Car List", () => {
+  test.describe.configure({ mode: "serial" });
 
   test("CL-001: car list page loads correctly", async ({ page }) => {
+    const carList = new CarListPage(page);
+    await carList.goto();
+
     await expect(page).toHaveTitle("CDMS Dashboard");
     await expect(carList.table).toBeVisible();
 
@@ -22,8 +20,10 @@ test.describe("Car list", () => {
   });
 
   test("CL-002: filter by keyword", async ({ page }) => {
-    const firstVcn = await carList.getFirstRowVehicleControlNo();
+    const carList = new CarListPage(page);
+    await carList.goto();
 
+    const firstVcn = await carList.getFirstRowVehicleControlNo();
     await carList.searchByKeyword(firstVcn);
 
     const rowCount = await carList.getRowCount();
@@ -34,6 +34,9 @@ test.describe("Car list", () => {
   });
 
   test("CL-007: pagination works", async ({ page }) => {
+    const carList = new CarListPage(page);
+    await carList.goto();
+
     const firstPageFirstVcn = await carList.getFirstRowVehicleControlNo();
 
     const page2Button = page.locator("a").filter({ hasText: /^2$/ }).first();

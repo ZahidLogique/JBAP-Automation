@@ -1,23 +1,24 @@
 import { test, expect } from "@playwright/test";
-import { CarFormPage, CarFormData } from "../../../pages/backoffice/CarFormPage";
+import { CarFormPage } from "../../../pages/backoffice/CarFormPage";
+import { loadState } from "../../../fixtures/test-state";
+import { EDIT_DATA } from "../../../fixtures/car-data";
 
-const TEST_VID = 4049;
-const EDIT_URL = `/wp-admin/car/edit-car/vid/${TEST_VID}`;
+test.describe("Edit Car", () => {
+  test.describe.configure({ mode: "serial" });
 
-const EDIT_DATA: Partial<CarFormData> = {
-  mileage: "55000",
-  color: "WHITE",
-  startPrice: "250000",
-};
+  let vid: number;
 
-test.describe("Edit car", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto(EDIT_URL);
-    await page.waitForLoadState("networkidle");
-    await expect(page.locator("h1")).toHaveText("Edit Car");
+  test.beforeEach(() => {
+    vid = loadState().createdVid ?? 0;
   });
 
   test("CE-001: form loads with existing car data", async ({ page }) => {
+    test.skip(!vid, "No created car VID available");
+
+    await page.goto(`/wp-admin/car/edit-car/vid/${vid}`);
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("h1")).toHaveText("Edit Car");
+
     const form = new CarFormPage(page);
 
     const vcn = await form.getFieldValue("vehicle_control_number");
@@ -39,16 +40,22 @@ test.describe("Edit car", () => {
   });
 
   test("CE-002: edit fields and submit successfully", async ({ page }) => {
+    test.skip(!vid, "No created car VID available");
+
+    await page.goto(`/wp-admin/car/edit-car/vid/${vid}`);
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("h1")).toHaveText("Edit Car");
+
     const form = new CarFormPage(page);
 
     await form.fillForm(EDIT_DATA);
     await form.submit();
 
+    await page.waitForTimeout(1000);
     await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
 
     const currentUrl = page.url();
-    const successIndicator = page.locator(".alert-success, .toast-success, .swal2-popup, [class*='success']");
+    const successIndicator = page.locator(".alert-success, .toast-success, .swal2-popup");
     const isRedirected = currentUrl.includes("/car/list") || currentUrl.includes("/car/detail");
     const isStillOnEdit = currentUrl.includes("/car/edit-car");
 
@@ -57,6 +64,12 @@ test.describe("Edit car", () => {
   });
 
   test("CE-003: required field validation on edit", async ({ page }) => {
+    test.skip(!vid, "No created car VID available");
+
+    await page.goto(`/wp-admin/car/edit-car/vid/${vid}`);
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("h1")).toHaveText("Edit Car");
+
     await page.evaluate(() => {
       const fields = ["plate_number", "chassis_number", "cr_no"];
       fields.forEach((id) => {
@@ -70,14 +83,18 @@ test.describe("Edit car", () => {
 
     const form = new CarFormPage(page);
     await form.submit();
-
     await page.waitForTimeout(2000);
 
-    const isStillOnEditPage = page.url().includes("edit-car");
-    expect(isStillOnEditPage).toBeTruthy();
+    expect(page.url()).toContain("edit-car");
   });
 
   test("CE-004: cancel edit without saving", async ({ page }) => {
+    test.skip(!vid, "No created car VID available");
+
+    await page.goto(`/wp-admin/car/edit-car/vid/${vid}`);
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("h1")).toHaveText("Edit Car");
+
     const form = new CarFormPage(page);
 
     const mileageField = page.locator("#mileage");
@@ -94,6 +111,12 @@ test.describe("Edit car", () => {
   });
 
   test("CE-006: dependent dropdown make to model", async ({ page }) => {
+    test.skip(!vid, "No created car VID available");
+
+    await page.goto(`/wp-admin/car/edit-car/vid/${vid}`);
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("h1")).toHaveText("Edit Car");
+
     const makeSelect = page.locator("#make");
     const isNativeSelect = (await makeSelect.evaluate((el) => el.tagName)) === "SELECT";
 
