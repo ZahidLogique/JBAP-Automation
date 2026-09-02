@@ -94,22 +94,26 @@ test.describe("E2E Auction Flow: Master → Bid Auction → Assign Car", () => {
       await form.searchSeller("TEST SELLER ZAHID");
     });
 
-    await test.step("Then at least one vehicle should appear", async () => {
+    await test.step("Then all 4 vehicles should appear", async () => {
       const rowCount = await form.getVehicleRowCount();
-      expect(rowCount).toBeGreaterThan(0);
+      expect(rowCount).toBe(4);
     });
 
-    await test.step("When I select the first vehicle and fill Lot No", async () => {
-      await form.selectVehicle(0);
-      await form.fillLotNo(0, "1");
+    await test.step("When I select all vehicles and fill Lot No for each", async () => {
+      await form.selectAllVehicles();
     });
 
     await test.step("And I save the assigned vehicle data", async () => {
-      const vehicle = await form.getVehicleRowData(0);
+      const vehicles = [];
+      const rowCount = await form.getVehicleRowCount();
+      for (let i = 0; i < rowCount; i++) {
+        vehicles.push(await form.getVehicleRowData(i));
+      }
       saveState({
-        e2eVehicleControlNo: vehicle.controlNo,
-        e2eVehicleModel: vehicle.model,
-        e2eSellerName: vehicle.sellerName,
+        e2eVehicleCount: rowCount,
+        e2eVehicleControlNo: vehicles[0].controlNo,
+        e2eVehicleModel: vehicles[0].model,
+        e2eSellerName: vehicles[0].sellerName,
       });
     });
 

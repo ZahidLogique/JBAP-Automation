@@ -125,21 +125,21 @@ test.describe("Auction - Auction List > Add Bid Auction", () => {
       await form.searchSeller("TEST SELLER ZAHID");
     });
 
-    await test.step("Then the vehicle table should display at least one vehicle", async () => {
+    await test.step("Then the vehicle table should display all 4 vehicles", async () => {
       const rowCount = await form.getVehicleRowCount();
-      expect(rowCount).toBeGreaterThan(0);
+      expect(rowCount).toBe(4);
     });
 
-    await test.step("And the vehicle data should contain expected seller name", async () => {
-      const vehicle = await form.getVehicleRowData(0);
-      expect(vehicle.sellerName).toContain("TEST SELLER ZAHID");
-      expect(vehicle.controlNo).toBeTruthy();
-      expect(vehicle.model).toBeTruthy();
+    await test.step("And all vehicles should belong to seller TEST SELLER ZAHID", async () => {
+      for (let i = 0; i < 4; i++) {
+        const vehicle = await form.getVehicleRowData(i);
+        expect(vehicle.sellerName).toContain("TEST SELLER ZAHID");
+        expect(vehicle.controlNo).toBeTruthy();
+      }
     });
 
-    await test.step("When I select the first vehicle and fill Lot No", async () => {
-      await form.selectVehicle(0);
-      await form.fillLotNo(0, "1");
+    await test.step("When I select all vehicles and fill Lot No for each", async () => {
+      await form.selectAllVehicles();
     });
 
     await test.step("And I click Next", async () => {

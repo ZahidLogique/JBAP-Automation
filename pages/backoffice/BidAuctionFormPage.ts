@@ -87,6 +87,19 @@ export class BidAuctionFormPage {
     await this.page.waitForTimeout(300);
   }
 
+  async selectAllVehicles() {
+    const rows = this.vehicleTable.locator("tbody tr");
+    const count = await rows.count();
+    for (let i = 0; i < count; i++) {
+      const checkbox = rows.nth(i).locator("input[type='checkbox']");
+      if (await checkbox.count() > 0) {
+        await checkbox.check();
+        await this.fillLotNo(i, String(i + 1));
+      }
+    }
+    await this.page.waitForTimeout(500);
+  }
+
   async getVehicleRowData(rowIndex: number = 0) {
     const row = this.vehicleTable.locator("tbody tr").nth(rowIndex);
     const cells = row.locator("td");
