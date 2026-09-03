@@ -53,8 +53,10 @@ export default defineConfig({
       dependencies: ["setup-backoffice"],
     },
     {
-      name: "web",
-      testDir: "./tests/web",
+      name: "auction",
+      testDir: "./tests/auction",
+      fullyParallel: false,
+      workers: 1,
       use: {
         ...devices["Desktop Chrome"],
         baseURL: process.env.WEB_URL,
