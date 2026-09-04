@@ -14,7 +14,7 @@ export class LoginPopup {
   }
 
   async clickLogin() {
-    await this.loginButton.click({ force: true });
+    await this.buyerIdInput.press("Enter");
   }
 
   async login(buyerId: string) {

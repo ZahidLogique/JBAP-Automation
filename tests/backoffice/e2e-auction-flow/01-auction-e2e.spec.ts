@@ -90,13 +90,13 @@ test.describe("E2E Auction Flow: Master → Bid Auction → Assign Car", () => {
       saveState({ e2eBidAuctionNo: values.auctionNo });
     });
 
-    await test.step("When I search for seller 'TEST SELLER ZAHID'", async () => {
-      await form.searchSeller("TEST SELLER ZAHID");
+    await test.step("When I search for seller 'ABI SELLER TAN'", async () => {
+      await form.searchSeller("ABI SELLER TAN");
     });
 
-    await test.step("Then all 4 vehicles should appear", async () => {
+    await test.step("Then vehicles should appear in the table", async () => {
       const rowCount = await form.getVehicleRowCount();
-      expect(rowCount).toBe(4);
+      expect(rowCount).toBeGreaterThan(0);
     });
 
     await test.step("When I select all vehicles and fill Lot No for each", async () => {

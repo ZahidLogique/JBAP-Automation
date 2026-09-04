@@ -18,12 +18,13 @@ test.describe("E2E Auction Flow: Buyer Login & Bid", () => {
     });
   });
 
-  test("E2E-BUY-002: buyer login with OTP", async ({ page }) => {
-    test.setTimeout(90000);
+  test("E2E-BUY-002: buyer login with OTP and check listing", async ({ page }) => {
+    test.setTimeout(120000);
     const home = new HomePage(page);
     const popup = new LoginPopup(page);
     const otp = new OtpVerificationPage(page);
 
+    // --- Login flow ---
     await test.step("Given I navigate to the homepage and open Buyer Login", async () => {
       await home.goto();
       await home.clickBuyerLogin();
@@ -63,7 +64,6 @@ test.describe("E2E Auction Flow: Buyer Login & Bid", () => {
     });
 
     await test.step("When I scroll Terms to bottom and click Agree", async () => {
-      // Find the scrollable element containing Terms text and scroll to bottom
       await page.evaluate(() => {
         const elements = document.querySelectorAll("*");
         for (const el of elements) {
@@ -77,13 +77,23 @@ test.describe("E2E Auction Flow: Buyer Login & Bid", () => {
         }
       });
       await page.waitForTimeout(1000);
-      await page.screenshot({ path: "test-results/after-scroll-terms.png" });
       await page.getByRole("button", { name: "Agree" }).last().click({ force: true });
       await page.waitForTimeout(3000);
     });
 
-    await test.step("Then the buyer should be logged in", async () => {
-      await page.screenshot({ path: "test-results/after-agree.png" });
+    await test.step("Then the buyer should be logged in with buyer menu visible", async () => {
+      await expect(page.getByText("Buyer's Page").last()).toBeVisible({ timeout: 10000 });
+    });
+
+    // --- Check listing ---
+    await test.step("When I click ALL LISTING", async () => {
+      await page.locator("a[href*='all-listing']").last().click();
+      await page.waitForLoadState("networkidle", { timeout: 30000 });
+    });
+
+    await test.step("Then the auction listing page should load", async () => {
+      await expect(page).toHaveURL(/all-listing/, { timeout: 10000 });
+      await page.screenshot({ path: "test-results/auction-listing.png" });
     });
   });
 });
