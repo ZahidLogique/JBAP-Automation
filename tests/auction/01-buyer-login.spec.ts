@@ -18,8 +18,8 @@ test.describe("E2E Auction Flow: Buyer Login & Bid", () => {
     });
   });
 
-  test("E2E-BUY-002: buyer login with OTP and check listing", async ({ page }) => {
-    test.setTimeout(120000);
+  test("E2E-BUY-002: buyer login, check listing, and place a bid", async ({ page }) => {
+    test.setTimeout(180000);
     const home = new HomePage(page);
     const popup = new LoginPopup(page);
     const otp = new OtpVerificationPage(page);
@@ -91,9 +91,51 @@ test.describe("E2E Auction Flow: Buyer Login & Bid", () => {
       await page.waitForLoadState("networkidle", { timeout: 30000 });
     });
 
-    await test.step("Then the auction listing page should load", async () => {
+    await test.step("Then the auction listing page should load with vehicles", async () => {
       await expect(page).toHaveURL(/all-listing/, { timeout: 10000 });
-      await page.screenshot({ path: "test-results/auction-listing.png" });
+    });
+
+    // --- Pick first vehicle ---
+    await test.step("When I click the first vehicle in the listing", async () => {
+      const vehicleCards = page.locator("a[href*='/auction/']").filter({ hasText: /\d{4}/ });
+      await vehicleCards.first().click();
+      await page.waitForLoadState("networkidle", { timeout: 30000 });
+    });
+
+    await test.step("Then the vehicle detail page should load", async () => {
+      await expect(page.getByText("Current Highest Bid").last()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole("button", { name: "BID" }).last()).toBeVisible();
+    });
+
+    // --- Place a bid ---
+    await test.step("When I click the BID button", async () => {
+      await page.getByRole("button", { name: "BID" }).last().click();
+      await page.waitForTimeout(1000);
+    });
+
+    await test.step("Then the Place your BID popup should appear and I confirm", async () => {
+      await expect(page.getByText("Place your BID").last()).toBeVisible({ timeout: 10000 });
+      await page.getByRole("button", { name: "Confirm" }).last().click();
+      await page.waitForTimeout(2000);
+    });
+
+    await test.step("Then the bid confirmation summary should appear", async () => {
+      await expect(page.getByText("Offer Placed").last()).toBeVisible({ timeout: 10000 });
+    });
+
+    await test.step("When I click BID to finalize", async () => {
+      await page.getByRole("button", { name: "BID" }).last().click();
+      await page.waitForTimeout(3000);
+    });
+
+    await test.step("Then the bid should be placed successfully", async () => {
+      const closeButton = page.locator("button").filter({ hasText: "×" }).last();
+      if (await closeButton.isVisible()) {
+        await closeButton.click({ force: true });
+        await page.waitForTimeout(1000);
+      }
+      await expect(page.getByText(/Number of Bids/).last()).toBeVisible();
+      await page.screenshot({ path: "test-results/bid-placed.png" });
     });
   });
 });

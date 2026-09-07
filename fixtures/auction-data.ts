@@ -22,18 +22,18 @@ function nextMonday(from: Date): Date {
   return d;
 }
 
-// Start must be Mon-Thu, end must be Tue-Fri and within the same week as start
-// (app disables other weekdays client-side). Mirrors the Mon->Wed pattern seen
-// in real production data. Deterministic (always "next Monday") rather than
-// randomized: the CRUD suite deletes the auction it creates before finishing
-// (see 04-delete-auction.spec.ts), so the slot is free again for the next run.
 export function nextValidAuctionDates(): { start: string; end: string } {
-  const start = nextMonday(new Date());
-  start.setHours(10, 0, 0, 0);
+  const start = new Date();
+  const day = start.getDay();
+  if (day < 1 || day > 4) {
+    while (start.getDay() !== 1) start.setDate(start.getDate() + 1);
+  }
+  const now = new Date();
+  start.setHours(now.getHours() - 1, 0, 0, 0);
 
   const end = new Date(start);
   end.setDate(start.getDate() + 2);
-  end.setHours(15, 0, 0, 0);
+  end.setHours(now.getHours() + 3, 0, 0, 0);
 
   return { start: formatDateTime(start), end: formatDateTime(end) };
 }
