@@ -90,8 +90,8 @@ test.describe("E2E Auction Flow: Master → Bid Auction → Assign Car", () => {
       saveState({ e2eBidAuctionNo: values.auctionNo });
     });
 
-    await test.step("When I search for seller 'ABI SELLER TAN'", async () => {
-      await form.searchSeller("ABI SELLER TAN");
+    await test.step("When I search for seller 'SELLER ZAHID AUTOMATION'", async () => {
+      await form.searchSeller("SELLER ZAHID AUTOMATION");
     });
 
     await test.step("Then vehicles should appear in the table", async () => {

@@ -121,8 +121,8 @@ test.describe("Auction - Auction List > Add Bid Auction", () => {
       await page.waitForTimeout(1000);
     });
 
-    await test.step("When I search for seller 'ABI SELLER TAN'", async () => {
-      await form.searchSeller("ABI SELLER TAN");
+    await test.step("When I search for seller 'SELLER ZAHID AUTOMATION'", async () => {
+      await form.searchSeller("SELLER ZAHID AUTOMATION");
     });
 
     await test.step("Then vehicles should appear in the table", async () => {
