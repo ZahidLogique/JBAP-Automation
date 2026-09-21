@@ -1,10 +1,17 @@
-name: Playwright Tests
+name: E2E Tests
+
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      test_scope:
+        description: "Test scope to run"
+        required: true
+        default: "e2e"
+        type: choice
+        options:
+          - e2e
+          - backoffice
+          - all
 
 jobs:
   test:
@@ -12,37 +19,66 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
       - run: npm ci
+
       - run: npx playwright install chromium --with-deps
 
       - name: Create .env
         run: |
-          echo "WEB_URL=${{ secrets.WEB_URL }}" >> .env
-          echo "BACKOFFICE_URL=${{ secrets.BACKOFFICE_URL }}" >> .env
-          echo "BASIC_AUTH_USER=${{ secrets.BASIC_AUTH_USER }}" >> .env
-          echo "BASIC_AUTH_PASS=${{ secrets.BASIC_AUTH_PASS }}" >> .env
-          echo "ADMIN_USER=${{ secrets.ADMIN_USER }}" >> .env
-          echo "ADMIN_PASS=${{ secrets.ADMIN_PASS }}" >> .env
-          echo "TEST_SEQUENTIAL=true" >> .env
-          echo "PLAYWRIGHT_HEADLESS=true" >> .env
+          cat <<EOF > .env
+          WEB_URL=${{ secrets.WEB_URL }}
+          BACKOFFICE_URL=${{ secrets.BACKOFFICE_URL }}
+          BASIC_AUTH_USER=${{ secrets.BASIC_AUTH_USER }}
+          BASIC_AUTH_PASS=${{ secrets.BASIC_AUTH_PASS }}
+          ADMIN_USER=${{ secrets.ADMIN_USER }}
+          ADMIN_PASS=${{ secrets.ADMIN_PASS }}
+          TEST_SEQUENTIAL=true
+          PLAYWRIGHT_HEADLESS=true
+          EOF
 
-      - run: npx playwright test
+      - name: Run Allure pretest scripts
+        run: npm run pretest
+
+      - name: Run tests
+        run: |
+          if [ "${{ inputs.test_scope }}" = "e2e" ]; then
+            npx playwright test --project=backoffice-e2e --project=auction --project=e2e-cleanup
+          elif [ "${{ inputs.test_scope }}" = "backoffice" ]; then
+            npx playwright test --project=backoffice
+          else
+            npx playwright test
+          fi
         env:
           CI: true
+
+      - name: Generate Allure report
+        if: always()
+        run: npx allure generate allure-results -o allure-report --clean
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-report
+          path: allure-report/
+          retention-days: 30
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
           path: playwright-report/
-          retention-days: 7
+          retention-days: 30
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: allure-results
-          path: allure-results/
+          name: test-results
+          path: |
+            test-results.json
+            test-results/
           retention-days: 7
