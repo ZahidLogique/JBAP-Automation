@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "description": "JBAP QA Automation",
   "scripts": {
+    "pretest": "node scripts/allure-env.js && node scripts/allure-categories.js",
     "test": "playwright test",
-    "test:web": "playwright test --project=web",
-    "report": "allure generate allure-results --clean -o allure-report && allure open allure-report",
+    "test:backoffice": "playwright test --project=backoffice",
+    "test:e2e": "playwright test --project=backoffice-e2e --project=auction --project=e2e-cleanup",
+    "test:auction": "playwright test --project=auction",
+    "posttest": "allure generate allure-results -o allure-report --clean",
+    "report": "allure generate allure-results -o allure-report --clean && allure open allure-report",
     "report:serve": "allure serve allure-results"
   },
   "devDependencies": {

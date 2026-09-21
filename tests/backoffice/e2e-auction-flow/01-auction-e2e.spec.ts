@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../../../fixtures/base";
 import { AuctionSchedulePage } from "../../../pages/backoffice/AuctionSchedulePage";
 import { AuctionFormPage } from "../../../pages/backoffice/AuctionFormPage";
 import { AuctionListPage } from "../../../pages/backoffice/AuctionListPage";
@@ -164,35 +164,6 @@ test.describe("E2E Auction Flow: Master → Bid Auction → Assign Car", () => {
       const row = await list.getOpenHouseRowData(0);
       expect(row.auctionNo).toBe(state.e2eBidAuctionNo);
       expect(row.location).toBe(state.e2eAuctionLocation);
-    });
-  });
-
-  test("E2E-004: cleanup - delete master auction schedule", async ({ page }) => {
-    test.setTimeout(60000);
-    const state = loadState();
-    test.skip(!state.e2eAuctionNo, "No master auction to clean up");
-
-    const list = new AuctionSchedulePage(page);
-
-    await test.step("Given I navigate to the Master Auction Schedule page", async () => {
-      await list.goto();
-    });
-
-    await test.step("When I search for the created auction", async () => {
-      await list.search(state.e2eAuctionNo);
-    });
-
-    await test.step("And I delete the auction", async () => {
-      const rowIndex = await list.findRowIndexByAuctionNo(state.e2eAuctionNo);
-      expect(rowIndex).toBeGreaterThanOrEqual(0);
-      const result = await list.deleteRowAndConfirm(rowIndex);
-      expect(result.success).toBeTruthy();
-    });
-
-    await test.step("Then the auction should no longer appear in the list", async () => {
-      await list.search(state.e2eAuctionNo);
-      const rowIndex = await list.findRowIndexByAuctionNo(state.e2eAuctionNo);
-      expect(rowIndex).toBe(-1);
     });
   });
 });

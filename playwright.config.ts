@@ -17,8 +17,8 @@ export default defineConfig({
     ["allure-playwright", { outputFolder: "allure-results", detail: true }],
   ],
   use: {
-    headless: false,
-    channel: "chrome",
+    headless: !!process.env.PLAYWRIGHT_HEADLESS,
+    channel: !process.env.PLAYWRIGHT_HEADLESS ? "chrome" : undefined,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     viewport: { width: 1920, height: 1080 },
@@ -39,6 +39,23 @@ export default defineConfig({
     {
       name: "backoffice",
       testDir: "./tests/backoffice",
+      testIgnore: ["**/e2e-*/**"],
+      fullyParallel: false,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: process.env.BACKOFFICE_URL,
+        storageState: ".auth/backoffice.json",
+        httpCredentials: {
+          username: process.env.BASIC_AUTH_USER!,
+          password: process.env.BASIC_AUTH_PASS!,
+        },
+      },
+      dependencies: ["setup-backoffice"],
+    },
+    {
+      name: "backoffice-e2e",
+      testDir: "./tests/backoffice/e2e-auction-flow",
       fullyParallel: false,
       workers: 1,
       use: {
@@ -61,6 +78,23 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
         baseURL: process.env.WEB_URL,
       },
+      dependencies: ["backoffice-e2e"],
+    },
+    {
+      name: "e2e-cleanup",
+      testDir: "./tests/e2e-cleanup",
+      fullyParallel: false,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: process.env.BACKOFFICE_URL,
+        storageState: ".auth/backoffice.json",
+        httpCredentials: {
+          username: process.env.BASIC_AUTH_USER!,
+          password: process.env.BASIC_AUTH_PASS!,
+        },
+      },
+      dependencies: ["auction"],
     },
   ],
 });
